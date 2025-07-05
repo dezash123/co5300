@@ -12,6 +12,7 @@ pub struct Co5300<SPI, TE, RST> {
     sync: TE,
     reset: RST,
     asleep: bool,
+    // framebuf: [u8; 512],
 }
 
 #[macro_export]
@@ -55,9 +56,9 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         
         // self.send_param_command(W_MADCTL, MADCTL_COLOR_ORDER).await?; // RGB/BGR
 
-        // self.send_param_command(W_PIXFMT, [0x55]).await?; // Interface Pixel Format 16bit/pixel
-        // self.send_param_command(W_PIXFMT, [0x66]).await?; // Interface Pixel Format 18bit/pixel
-        self.qspi_write(param_command!(W_PIXFMT, [0x77])).await?; // Interface Pixel Format 24bit/pixel
+        // self.send_param_command(W_PIXFMT, [0x55]).await?; // Interface Pixel Format 16bit/pixel (rgb565)
+        // self.send_param_command(W_PIXFMT, [0x66]).await?; // Interface Pixel Format 18bit/pixel (rgb666)
+        self.qspi_write(param_command!(W_PIXFMT, [0x77])).await?; // Interface Pixel Format 24bit/pixel (rgb888)
         
         self.qspi_write(param_command!(W_WCTRLD1, [1 << 5])).await?; // en/disable brightness control
         self.qspi_write(param_command!(W_WDBRIGHTNESSVALHBM, [0xFF])).await?;
@@ -122,19 +123,19 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         (pixel.y as u16 + Y_OFFS).to_be_bytes())
     }
 
-    async fn set_pixel_location(&mut self, pixel: Point) -> Result<(), Error<SE, PE>> {
+    pub async fn set_pixel_location(&mut self, pixel: Point) -> Result<(), Error<SE, PE>> {
         let (x, y) = Self::pixel_setup(pixel);
         self.qspi_write(param_command!(W_CASET, [x[0], x[1]])).await?;
         self.qspi_write(param_command!(W_PASET, [y[0], y[1]])).await
     }
 
     #[inline]
-    pub async fn send_command(&mut self, command: u8) -> Result<(), Error<SE, PE>> {
+    async fn send_command(&mut self, command: u8) -> Result<(), Error<SE, PE>> {
         self.qspi_write(&[0x02u8.to_be(), 0x00, command.to_be(), 0x00]).await
     }
 
     #[inline]
-    pub async fn qspi_write(&mut self, data: &[u8]) -> Result<(), Error<SE, PE>> {
+    async fn qspi_write(&mut self, data: &[u8]) -> Result<(), Error<SE, PE>> {
         self.spi.write(data).await.map_err(Error::SpiError)
     }
 }
