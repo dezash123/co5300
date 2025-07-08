@@ -100,7 +100,6 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         info!("Reset done");
         self.qspi_write(&[0xFF]).await?;
         Timer::after_millis(10).await;
-        info!("set spi mode");
         self.pcmd(0xFE, 0x00).await?;
         Timer::after_millis(10).await;
         self.pcmd(0xC4, 0x80).await?;
