@@ -135,6 +135,7 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         // for i in 0..3 {
         //     info!("add 1");
         // }
+        info!("add 1");
 
 
         Ok(self)
