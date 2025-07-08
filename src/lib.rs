@@ -119,13 +119,13 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         self.spi_write(&[0x02, 0x00, 0x2B, 0x00, 0x00, 0x00, 0x01, 0xD1]).await?;
         Timer::after_millis(10).await;
         self.spi_write(&[0x02, 0x00, 0x11, 0x00]).await?;
-        info!("slpout");
+        // info!("slpout");
         Timer::after_millis(500).await;
         self.send_command(C_ALLPON).await?;
-        info!("wrote allpon");
+        // info!("wrote allpon");
         Timer::after_millis(100).await;
         self.spi_write(&[0x02, 0x00, 0x29, 0x00]).await?;
-        info!("disp on");
+        // info!("disp on");
         
         self.spi_write(&[0x03, 0x00, 0x0F, 0x00]).await?;
         Timer::after_millis(100).await;
