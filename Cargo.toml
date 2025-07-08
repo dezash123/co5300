@@ -10,7 +10,6 @@ categories = ["embedded", "no-std"]
 
 [dependencies]
 defmt = "1.0.1"
-anyhow = { version = "1.0", default-features = false }
 embedded-hal = { version = "1.0.0", optional = true } 
 embedded-hal-async = { version = "1.0.0", optional = true } 
 heapless = "0.8.0"
@@ -19,6 +18,8 @@ embedded-graphics-core = { version = "0.4.0", optional = true }
 embedded-graphics-framebuf = "0.5.0"
 
 embassy-time = { version = "0.4.0", optional = true }
+panic-rtt-target = { version = "0.2.0", features = ["defmt"] }
+rtt-target = { version = "0.6.1", features = ["defmt"] }
 
 [features]
 default = ["async", "embedded_graphics", "embassy"]
