@@ -132,7 +132,7 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         Timer::after_millis(100).await;
         let mut buf = [0; 3];
         self.spi.read(&mut buf).await.map_err(Error::SpiError)?;
-        info!("ID: {:?}", buf);
+        info!("ID1: {}", buf[0]);
 
 
         Ok(self)
