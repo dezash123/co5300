@@ -1,4 +1,4 @@
-use crate::{co5300::Co5300, param_command};
+use crate::{Co5300, param_command};
 use embedded_graphics_core::{pixelcolor::{Gray8, Rgb565, Rgb666, Rgb888}, prelude::*};
 use embedded_hal::digital::OutputPin;
 use embedded_hal_async::{delay::DelayNs, digital::Wait, spi::SpiBus};
