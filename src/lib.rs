@@ -48,7 +48,7 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
     TE: Wait,
 {
     pub async fn new(spi: SPI, sync: TE, reset: RST) -> Result<Self, Error<SE, PE>> {
-        Self { spi, sync, reset, asleep: false }.init().await
+        Self { spi, sync, reset, asleep: false }.init_spi().await
     }
 
     async fn init(mut self) -> Result<Self, Error<SE, PE>> {
@@ -83,6 +83,34 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
 
         // self.qspi_write(param_command!(W_WCE, [Contrast::ContrastOff as u8])).await?;
 
+        Ok(self)
+    }
+    async fn pcmd(&mut self, command: u8, param: u8) -> Result<(), Error<SE, PE>> {
+        self.spi_write(&[0x02, 0x00, command, 0x00, param]).await
+    }
+
+    pub async fn init_spi(mut self) -> Result<Self, Error<SE, PE>> {
+        self.pcmd(0xFE, 0x00).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0xC4, 0x80).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0x3A, 0x55).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0x35, 0x00).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0x53, 0x20).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0x51, 0xFF).await?;
+        Timer::after_millis(10).await;
+        self.pcmd(0x63, 0xFF).await?;
+        Timer::after_millis(10).await;
+        self.spi_write(&[0x02, 0x00, 0x2A, 0x00, 0x00, 0x06, 0x01, 0xD7]).await?;
+        Timer::after_millis(10).await;
+        self.spi_write(&[0x02, 0x00, 0x2B, 0x00, 0x00, 0x00, 0x01, 0xD1]).await?;
+        Timer::after_millis(10).await;
+        self.spi_write(&[0x02, 0x00, 0x11, 0x00]).await?;
+        Timer::after_millis(500).await;
+        self.spi_write(&[0x02, 0x00, 0x29, 0x00]).await?;
         Ok(self)
     }
 
@@ -144,7 +172,7 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
 
     #[inline]
     async fn send_command(&mut self, command: u8) -> Result<(), Error<SE, PE>> {
-        self.qspi_write(&[0x02u8.to_be(), 0x00, command.to_be(), 0x00]).await
+        self.qspi_write(&[0x02, 0x00, command, 0x00]).await
     }
 
     #[inline]
@@ -152,7 +180,14 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         self.spi.write(data).await.map_err(Error::SpiError)
     }
 
-    // pub async fn test(&mut self) -> Result<(), Error<SE, PE>> {
+    async fn spi_write(&mut self, data: &[u8]) -> Result<(), Error<SE, PE>> {
+        self.spi.write(data).await.map_err(Error::SpiError)
+    }
 
-    // }
+    pub async fn get_id(&mut self) -> Result<[u8; 3], Error<SE, PE>> {
+        self.qspi_write(&[0x03, 0x00, 0x0F, 0x00]).await?;
+        let mut buf = [0; 3];
+        self.spi.read(&mut buf).await.map_err(Error::SpiError)?;
+        Ok(buf)
+    }
 }
