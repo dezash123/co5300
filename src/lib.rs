@@ -52,30 +52,36 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
     }
 
     async fn init(mut self) -> Result<Self, Error<SE, PE>> {
-        self.wake().await?;
-        self.set_4wire().await?;
+        // self.wake().await?;
+        // self.set_4wire().await?;
 
         self.qspi_write(param_command!(SET_CMD_PAGE, [0])).await?;
 
         // self.send_param_command(WC_TEARON, [0x00]).await?;
         
-        self.qspi_write(param_command!(W_SPIMODECTL, [1 << 7])).await?;
+        // self.qspi_write(param_command!(W_SPIMODECTL, [1 << 7])).await?;
         
         // self.send_param_command(W_MADCTL, MADCTL_COLOR_ORDER).await?; // RGB/BGR
 
-        // self.send_param_command(W_PIXFMT, [0x55]).await?; // Interface Pixel Format 16bit/pixel (rgb565)
+        self.qspi_write(param_command!(W_PIXFMT, [0x55])).await?; // Interface Pixel Format 16bit/pixel (rgb565)
         // self.send_param_command(W_PIXFMT, [0x66]).await?; // Interface Pixel Format 18bit/pixel (rgb666)
-        self.qspi_write(param_command!(W_PIXFMT, [0x77])).await?; // Interface Pixel Format 24bit/pixel (rgb888)
+        // self.qspi_write(param_command!(W_PIXFMT, [0x77])).await?; // Interface Pixel Format 24bit/pixel (rgb888)
         
-        self.qspi_write(param_command!(W_WCTRLD1, [1 << 5])).await?; // en/disable brightness control
+        // self.qspi_write(param_command!(W_WCTRLD1, [1 << 5])).await?; // en/disable brightness control
+        self.qspi_write(param_command!(W_WCTRLD1, [0x20])).await?; // en/disable brightness control
+        self.qspi_write(param_command!(W_WDBRIGHTNESSVALNOR, [0xFF])).await?;
         self.qspi_write(param_command!(W_WDBRIGHTNESSVALHBM, [0xFF])).await?;
 
         self.qspi_write(param_command!(W_CASET, [0x00, 0x06, 0x01, 0xD7])).await?;
         self.qspi_write(param_command!(W_PASET, [0x00, 0x00, 0x01, 0xD1])).await?;
 
+        self.send_command(C_SLPOUT).await?;
+
+        Timer::after_millis(100).await;
+
         self.send_command(C_DISPON).await?;
 
-        self.qspi_write(param_command!(W_WCE, [Contrast::ContrastOff as u8])).await?;
+        // self.qspi_write(param_command!(W_WCE, [Contrast::ContrastOff as u8])).await?;
 
         Ok(self)
     }
@@ -145,4 +151,8 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
     async fn qspi_write(&mut self, data: &[u8]) -> Result<(), Error<SE, PE>> {
         self.spi.write(data).await.map_err(Error::SpiError)
     }
+
+    // pub async fn test(&mut self) -> Result<(), Error<SE, PE>> {
+
+    // }
 }
