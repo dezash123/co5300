@@ -130,9 +130,9 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         
         self.spi_write(&[0x03, 0x00, 0x0F, 0x00]).await?;
         Timer::after_millis(100).await;
-        let mut buf = [0; 3];
-        self.spi.read(&mut buf).await.map_err(Error::SpiError)?;
-        for i in 0..buf[0] & 0b111 {
+        // let mut buf = [0; 3];
+        // self.spi.read(&mut buf).await.map_err(Error::SpiError)?;
+        for i in 0..3 {
             info!("add 1");
         }
 
