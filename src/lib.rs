@@ -10,6 +10,7 @@ use embedded_hal::digital::OutputPin;
 use embedded_hal_async::{delay::DelayNs, digital::Wait, spi::SpiBus};
 use crate::{consts::*, error::Error};
 use embassy_time::Timer;
+use defmt::info;
 
 pub const X_OFFS: u16 = 6;
 pub const Y_OFFS: u16 = 0;
@@ -90,6 +91,16 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
     }
 
     pub async fn init_spi(mut self) -> Result<Self, Error<SE, PE>> {
+        self.reset.set_low().map_err(Error::PinError)?;
+        info!("Reset down");
+        Timer::after_millis(200).await;
+        self.reset.set_high().map_err(Error::PinError)?;
+        info!("Reset up");
+        Timer::after_millis(100).await;
+        info!("Reset done");
+        self.qspi_write(&[0xFF]).await?;
+        Timer::after_millis(10).await;
+        info!("set spi mode");
         self.pcmd(0xFE, 0x00).await?;
         Timer::after_millis(10).await;
         self.pcmd(0xC4, 0x80).await?;
@@ -109,8 +120,13 @@ impl<SPI, TE, RST, SE, PE> Co5300<SPI, TE, RST>
         self.spi_write(&[0x02, 0x00, 0x2B, 0x00, 0x00, 0x00, 0x01, 0xD1]).await?;
         Timer::after_millis(10).await;
         self.spi_write(&[0x02, 0x00, 0x11, 0x00]).await?;
+        info!("slpout");
         Timer::after_millis(500).await;
+        self.send_command(C_ALLPON).await?;
+        info!("wrote allpon");
+        Timer::after_millis(100).await;
         self.spi_write(&[0x02, 0x00, 0x29, 0x00]).await?;
+        info!("disp on");
         Ok(self)
     }
 
